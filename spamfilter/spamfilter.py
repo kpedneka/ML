@@ -1,4 +1,7 @@
-
+'''
+The skeleton for this file was sourced from CIS 521 of U Penn
+source link: http://www.seas.upenn.edu/~cis521/#ASSIGNMENTS
+'''
 import email, math, os, operator
 
 '''
