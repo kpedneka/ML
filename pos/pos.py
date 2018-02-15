@@ -75,6 +75,7 @@ def emission_prob(tag_counts, word_counts, sentences):
             set_of_words.add(word)
     # update probabilities for each word only once now that it is a set
     for word in set_of_words:
+        # stores a tuple in the format (word, probability of word)
         if emissions.has_key(word[1]):
             probs = emissions.get(word[1])
             probs.append((word[0], float(word_counts[word[0]])/tag_counts[word[1]]))
@@ -94,7 +95,19 @@ class Tagger(object):
         self.emission_prob = emission_prob(self.tag_counts, self.word_counts, sentences)
 
     def most_probable_tags(self, tokens):
-        pass
+        highest_prob = 0.
+        cur_tag = ""
+        tags = []
+        for token in tokens:
+            for entry in self.emission_prob:
+                match = list(filter(lambda x: x[0] == token, self.emission_prob[entry]))
+                if len(match) > 0:
+                    if match[0][1] > highest_prob:
+                        highest_prob = match[0][1]
+                        cur_tag = entry
+            tags.append(cur_tag)
+            cur_tag = ""; highest_prob = 0.
+        return tags
 
     def viterbi_tags(self, tokens):
         pass
@@ -104,3 +117,6 @@ if __name__ == "__main__":
     # print c[1799]
     # print c[1402]
     t = Tagger(c)
+    print t.most_probable_tags(["The", "man", "walks", "."])
+    print t.most_probable_tags(["The", "blue", "bird", "sings"])
+	
