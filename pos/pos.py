@@ -68,16 +68,19 @@ def transitions_prob(counts, sentences):
 
 def emission_prob(tag_counts, word_counts, sentences):
     emissions = dict()
+    set_of_words = set()
+	# create a set of words from the corpus
     for sentence in sentences:
         for word in sentence:
-            word_tuple = (word[0], float(word_counts[word[0]])/float(tag_counts[word[1]]))
-            # if tag entry exists already
-            if emissions.has_key(word[1]):
-                tuple_list = set(emissions.get(word[1]))
-                tuple_list.add(word_tuple)
-                emissions[word[1]] = tuple_list
-            else:
-                emissions[word[1]] = set(word_tuple)
+            set_of_words.add(word)
+    # update probabilities for each word only once now that it is a set
+    for word in set_of_words:
+        if emissions.has_key(word[1]):
+            probs = emissions.get(word[1])
+            probs.append((word[0], float(word_counts[word[0]])/tag_counts[word[1]]))
+            emissions[word[1]] = probs
+        else:
+             emissions[word[1]] = [(word[0], float(word_counts[word[0]])/tag_counts[word[1]])]
     return emissions
 
 class Tagger(object):
@@ -88,8 +91,7 @@ class Tagger(object):
         self.word_counts = word_counts(sentences)
         self.start_tag_prob = start_tag_prob(self.tag_counts, sentences)
         self.transitions_prob = transitions_prob(self.tag_counts, sentences)
-        # self.emission_prob = emission_prob(self.tag_counts, self.word_counts, sentences)
-        # print self.emission_prob
+        self.emission_prob = emission_prob(self.tag_counts, self.word_counts, sentences)
 
     def most_probable_tags(self, tokens):
         pass
