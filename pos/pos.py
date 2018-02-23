@@ -4,6 +4,9 @@ source link: http://www.seas.upenn.edu/~cis521/#ASSIGNMENTS
 '''
 import os
 
+'''
+Function to read corpus and return a list of tuples in format [(word, tag)]
+'''
 def load_corpus(path):
     fp = open(os.path.join(os.getcwd(), path))
     lines = fp.readlines()
@@ -17,6 +20,9 @@ def load_corpus(path):
         c.append(l)
     return c
 
+'''
+Function that creates a key-value pair in format key = tag, value = tag count
+'''
 def tag_counts(sentences):
     counts = dict()
     for sentence in sentences:
@@ -28,6 +34,9 @@ def tag_counts(sentences):
                 counts[word[1]] = 1
     return counts
 
+'''
+Function that creates a key-value pair in format key = word, value = word count
+'''
 def word_counts(sentences):
     counts = dict()
     for sentence in sentences:
@@ -39,6 +48,9 @@ def word_counts(sentences):
                 counts[word[0]] = 1
     return counts
 
+'''
+Function that creates a key-value pair in format key = start_token, value = probability of start token
+'''
 def start_tag_prob(counts, sentences):
     tags = dict()
     smoothing = 1e-5
@@ -66,6 +78,9 @@ def transitions_prob(counts, sentences):
                 transitions[key] = float(1)/counts[t_i[1]]
     return transitions
 
+'''
+Function that returns a key-value pair dictionary in format key = tag, value = [(word i, probability of word i)]
+'''
 def emission_prob(tag_counts, word_counts, sentences):
     emissions = dict()
     set_of_words = set()
@@ -85,15 +100,23 @@ def emission_prob(tag_counts, word_counts, sentences):
     return emissions
 
 class Tagger(object):
-
+    '''
+    Init function for pos Tagger object
+    '''
     def __init__(self, sentences):
-        # get counts of tags
         self.tag_counts = tag_counts(sentences)
+        self.total_tags = len(self.tag_counts)
+        self.num_tags = len(self.tag_counts)
         self.word_counts = word_counts(sentences)
+        self.total_words = reduce(lambda x, y: x+y, self.word_counts.values())
+        print self.total_words
         self.start_tag_prob = start_tag_prob(self.tag_counts, sentences)
         self.transitions_prob = transitions_prob(self.tag_counts, sentences)
         self.emission_prob = emission_prob(self.tag_counts, self.word_counts, sentences)
-
+    
+    '''
+    Function to calculate the most probable tags using the emissions dict (Bayesian probability)
+    '''
     def most_probable_tags(self, tokens):
         highest_prob = 0.
         cur_tag = ""
@@ -102,13 +125,23 @@ class Tagger(object):
             for entry in self.emission_prob:
                 match = list(filter(lambda x: x[0] == token, self.emission_prob[entry]))
                 if len(match) > 0:
-                    if match[0][1] > highest_prob:
-                        highest_prob = match[0][1]
+                    # curr_word is the word we want to work with
+                    curr_word = match[0]
+                    curr_word_prob = curr_word[1]*(float(self.tag_counts.get(entry))/self.total_words)
+                    # p(tag | word) = p(word | tag) * p(tag)
+                    print curr_word[1], curr_word[0], entry, float(self.tag_counts.get(entry))/self.total_words
+                    if curr_word_prob > highest_prob:
+                        # update most probable tag if curr_word has higher prob
+                        highest_prob = curr_word_prob
                         cur_tag = entry
+            # append most probable tag and reset for next token
             tags.append(cur_tag)
             cur_tag = ""; highest_prob = 0.
         return tags
 
+    '''
+    Function to calculate most probable tags using Viterbi algorithm
+    '''
     def viterbi_tags(self, tokens):
         pass
 
